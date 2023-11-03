@@ -1,6 +1,7 @@
 import rowordnet as rwn
 from cube.api import Cube
 from itertools import chain
+from os import path
 
 WORDNET = rwn.RoWordNet()
 
@@ -62,7 +63,9 @@ def get_lemmas_from_file(words):
 
 
 def read_file_content(file_name):
-    with open(file_name, "r") as file:
+    with open(
+        path.join(path.dirname(__file__), "text_samples", file_name), "r"
+    ) as file:
         text = file.read()
         words = text.split()
         return to_lower_case(remove_non_letters(remove_duplicates(words)))
@@ -91,7 +94,7 @@ def remove_non_letters(word_list):
 
 
 def fetch_synset_ids_for_words(words):
-    synsets = (WORDNET.synsets(literal=word) for word in words)
+    synsets = (WORDNET.synsets(literal=word, strict=True) for word in words)
     all_synsets = chain.from_iterable(synsets)
     return remove_duplicates(all_synsets)
 
@@ -109,14 +112,15 @@ def main():
     input_file_name = input("Enter file name: ")
     words_from_file = read_file_content(input_file_name)
     lemmas = get_lemmas_from_file(words_from_file)
-    print(lemmas)
     synset_ids = fetch_synset_ids_for_words(lemmas)
-    write_synset_definitions_to_file("out.txt", synset_ids)
+    write_synset_definitions_to_file(
+        input_file_name.replace(".txt", "_out.txt"), synset_ids
+    )
 
 
 def check_word_exists(word):
     word = word.lower()
-    synset_ids = WORDNET.synsets(literal=word, strict=False)
+    synset_ids = WORDNET.synsets(literal=word, strict=True)
     if synset_ids:
         for synset_id in synset_ids:
             synset = WORDNET.synset(synset_id)
