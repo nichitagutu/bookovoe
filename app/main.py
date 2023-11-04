@@ -1,7 +1,12 @@
+from os import path
+from itertools import chain
+
 import rowordnet as rwn
 from cube.api import Cube
-from itertools import chain
-from os import path
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 WORDNET = rwn.RoWordNet()
 
