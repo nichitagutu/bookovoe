@@ -45,7 +45,8 @@ CREATE TABLE user_definitions (
 
 CREATE TABLE user_word_reviews (
     review_id SERIAL PRIMARY KEY,
-    user_word_id INT NOT NULL REFERENCES user_words(user_word_id),
+    user_id INT NOT NULL REFERENCES users(user_id),
+    word_id INT NOT NULL REFERENCES words(word_id),
     review_date DATE NOT NULL,
     ease_factor FLOAT NOT NULL DEFAULT 2.5,
     interval INT NOT NULL DEFAULT 1,

@@ -1,15 +1,20 @@
-from sqlalchemy import Column, String, Integer
-from sqlalchemy.orm import relationship
-from ..database import Base
+import logging
+
+from app.db.queries import create_user
 
 
-class User(Base):
-    __tablename__ = "users"
+class User:
+    def __init__(self, username, email, password):
+        self.username = username
+        self.email = email
+        self.password = password
 
-    user_id = Column(Integer, primary_key=True)
-    username = Column(String(255), unique=True, nullable=False)
-    email = Column(String(255), unique=True, nullable=False)
-    password = Column(String(255), nullable=False)
-
-    user_words = relationship("UserWord", back_populates="user")
-    user_definitions = relationship("UserDefinition", back_populates="user")
+    def create_user(self):
+        try:
+            user_id = create_user(self.username, self.email, self.password)
+            return user_id
+        except Exception as e:
+            logging.error(
+                f"Error in create_user method with user {self.username} {self.email}: {e}"
+            )
+            raise e
