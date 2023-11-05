@@ -1,14 +1,22 @@
-from sqlalchemy import Column, String, Integer, ForeignKey
-from sqlalchemy.orm import relationship
-from ..database import Base
+import logging
+
+from app.db.queries import create_definition
 
 
-class Definition(Base):
-    __tablename__ = "definitions"
+class Definition:
+    def __init__(self, word_id, definition):
+        self.word_id = word_id
+        self.definition = definition
 
-    definition_id = Column(Integer, primary_key=True)
-    definition = Column(String, nullable=False)
-    word_id = Column(Integer, ForeignKey("words.word_id"), nullable=False)
-
-    word = relationship("Word", back_populates="definitions")
-    user_definitions = relationship("UserDefinition", back_populates="definition")
+    def create_definition(self):
+        try:
+            definition_id = create_definition(self.word_id, self.definition)
+            logging.info(
+                f'Added definition "{self.definition}" with id {definition_id}'
+            )
+            return definition_id
+        except Exception as e:
+            logging.error(
+                f'Error in create_definition method with definition "{self.definition}": {e}'
+            )
+            raise e

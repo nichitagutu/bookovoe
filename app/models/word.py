@@ -1,15 +1,17 @@
-from sqlalchemy import Column, String, Integer, Index
-from sqlalchemy.orm import relationship
-from ..database import Base
+import logging
+
+from app.db.queries import create_word
 
 
-class Word(Base):
-    __tablename__ = "words"
+class Word:
+    def __init__(self, word):
+        self.word = word
 
-    word_id = Column(Integer, primary_key=True)
-    word = Column(String(255), nullable=False)
-
-    __table_args__ = (Index("idx_word", "word"),)
-
-    definitions = relationship("Definition", back_populates="word")
-    user_words = relationship("UserWord", back_populates="word")
+    def create_word(self):
+        try:
+            word_id = create_word(self.word)
+            logging.info(f'Added word "{self.word}" with id {word_id}')
+            return word_id
+        except Exception as e:
+            logging.error(f'Error in create_word method with word "{self.word}": {e}')
+            raise e
