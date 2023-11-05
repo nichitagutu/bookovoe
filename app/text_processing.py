@@ -1,4 +1,6 @@
-from utilities import filter_romanian_letters
+from typing import List
+
+from constants import ROMANIAN_LETTERS
 
 
 def get_lemmas_from_document(document):
@@ -44,6 +46,18 @@ def process_long_text(cube, words):
     return lemmas
 
 
-def remove_non_letters(word_list):
+def filter_romanian_letters(word: str) -> str:
+    return "".join([char for char in word if char in ROMANIAN_LETTERS])
+
+
+def remove_non_letters(word_list: List[str]) -> List[str]:
     filtered_words = [filter_romanian_letters(word.lower()) for word in word_list]
     return [word for word in filtered_words if word]
+
+
+def to_lower_case(word_list: List[str]) -> List[str]:
+    return [word.lower() for word in word_list]
+
+
+def remove_underscores(synset_literals: List[str]) -> List[str]:
+    return [literal.replace("_", " ") for literal in synset_literals]

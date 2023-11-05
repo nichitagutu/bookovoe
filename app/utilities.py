@@ -1,13 +1,5 @@
-from constants import ROMANIAN_LETTERS
+from typing import List, Any
 
 
-def remove_duplicates(items):
+def remove_duplicates(items: List[Any]) -> List[Any]:
     return list(set(items))
-
-
-def to_lower_case(word_list):
-    return [word.lower() for word in word_list]
-
-
-def filter_romanian_letters(word):
-    return "".join([char for char in word if char in ROMANIAN_LETTERS])
