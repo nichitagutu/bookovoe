@@ -4,7 +4,7 @@ logging.basicConfig(filename="example.log", encoding="utf-8", level=logging.DEBU
 
 import rowordnet as rwn
 from cube.api import Cube
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from dotenv import load_dotenv
@@ -23,13 +23,10 @@ CUBE.load("ro")
 
 Database.initialize()
 
-# allow origin localhost:1420
-
-
 app = FastAPI()
 
 origins = [
-    "http://localhost:1420",
+    "http://localhost:1422",
 ]
 
 app.add_middleware(
@@ -43,7 +40,16 @@ app.add_middleware(
 
 @app.get("/words")
 def get_all_words():
-    return {"words": Word.get_all_words()}
+    return {"words": Word.get_all_words_and_definitions()}
+
+
+@app.get("/cards")
+def get_all_cards(user_id: int = -1, limit: int = 50):
+    if user_id == -1:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    cards = Word.get_cards_to_learn(user_id=user_id, size=limit)
+    return {"cards": cards}
 
 
 @app.get("/word/{word_id}/definition")

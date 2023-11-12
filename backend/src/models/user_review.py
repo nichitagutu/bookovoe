@@ -1,6 +1,13 @@
 import logging
 
-from db.queries import update_user_review, get_latest_user_review
+from db.queries import (
+    update_user_review,
+    get_latest_user_review,
+    get_all_reviews,
+    get_all_reviewed_word_ids,
+    get_latest_by_word_id,
+    get_all_word_reviews,
+)
 
 
 class UserReview:
@@ -8,10 +15,12 @@ class UserReview:
         self,
         user_id,
         word_id,
+        definition_id,
         review_date,
     ):
         self.user_id = user_id
         self.word_id = word_id
+        self.definition_id = definition_id
         self.review_date = review_date
         self.ease_factor = 1.3
         self.interval = 0
@@ -63,4 +72,43 @@ class UserReview:
             return user_review_id
         except Exception as e:
             logging.error(f"Failed to update review for user {self.user_id}: {e}")
+            raise
+
+    @staticmethod
+    def get_all_reviews(user_id):
+        try:
+            reviews = get_all_reviews(user_id)
+            logging.info(f"Got all reviews for user {user_id}")
+            return reviews
+        except Exception as e:
+            logging.error(f"Failed to get reviews for user {user_id}: {e}")
+            raise
+
+    @staticmethod
+    def get_all_reviewed_word_ids(user_id) -> list:
+        try:
+            word_ids = get_all_reviewed_word_ids(user_id)
+            logging.info(f"Got all reviewed word ids for user {user_id}")
+            return word_ids
+        except Exception as e:
+            logging.error(f"Failed to get reviewed word ids for user {user_id}: {e}")
+            raise
+
+    @staticmethod
+    def get_latest_by_word_id(word_id):
+        try:
+            reviews = get_latest_by_word_id(word_id)
+            logging.info(f"Got all reviews for word {word_id}")
+            return reviews
+        except Exception as e:
+            logging.error(f"Failed to get reviews for word {word_id}: {e}")
+            raise
+
+    @staticmethod
+    def get_all_word_reviews(user_id):
+        try:
+            reviews = get_all_word_reviews(user_id)
+            return reviews
+        except Exception as e:
+            logging.error(f"Failed to get all word reviews for user {user_id}: {e}")
             raise
