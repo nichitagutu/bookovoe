@@ -1,2 +1,5 @@
-FROM postgres:13
-COPY src/db/schema.sql /docker-entrypoint-initdb.d/
+FROM redis:latest
+
+EXPOSE 6379
+
+CMD ["redis-server"]

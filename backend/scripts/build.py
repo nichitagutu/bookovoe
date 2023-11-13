@@ -49,7 +49,7 @@ def main():
     image_name = "languagelearning"
     container_name = "languagelearning"
     env_file = ".env"
-    port_mapping = "5432:5432"
+    port_mapping = "6379:6379"
 
     docker_build_and_run(image_name, container_name, env_file, port_mapping)
 

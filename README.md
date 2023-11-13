@@ -1,7 +1,8 @@
-# Tauri + React + Typescript
+## Roadmap
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+- [x] Parse text from as is
 
-## Recommended IDE Setup
+- [x] Parse text from e-book formats
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- [x] Parse text from links
+

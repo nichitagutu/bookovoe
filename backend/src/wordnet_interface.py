@@ -18,7 +18,6 @@ def get_synset_key_value_definitions(
     definitions: Dict[str, List[str]] = {}
     for synset_id in synset_ids:
         synset = wordnet.synset(synset_id)
-        print("synset: ", synset)
         words = remove_underscores(synset.literals)
         definition = synset.definition
         for word in words:

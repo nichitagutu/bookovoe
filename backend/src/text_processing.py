@@ -64,6 +64,7 @@ def to_lower_case(word_list: List[str]) -> List[str]:
 def remove_underscores(synset_literals: List[str]) -> List[str]:
     return [literal.replace("_", " ") for literal in synset_literals]
 
+
 def prepare_text(text: str) -> List[str]:
     words = text.split()
     return to_lower_case(remove_non_letters(remove_duplicates(words)))

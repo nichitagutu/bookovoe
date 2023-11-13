@@ -1,27 +1,32 @@
 import logging
 
+
 logging.basicConfig(filename="example.log", encoding="utf-8", level=logging.DEBUG)
+
+import json
+import urllib.request
+
+from file_handling import save_words_from_text
+
 
 import rowordnet as rwn
 from cube.api import Cube
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+import redis
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from db.connection import Database
-from models.word import Word
-from models.user_review import UserReview
-from models.definition import Definition
+
+redis_client = redis.StrictRedis(host="localhost", port=6379, db=0)
+
 
 WORDNET = rwn.RoWordNet()
 
 CUBE = Cube(verbose=True)
 CUBE.load("ro")
-
-Database.initialize()
 
 app = FastAPI()
 
@@ -38,36 +43,108 @@ app.add_middleware(
 )
 
 
-@app.get("/words")
-def get_all_words():
-    return {"words": Word.get_all_words_and_definitions()}
+def add_entry(word, definition, value):
+    key = json.dumps({"word": word, "definition": definition})
+    redis_client.set(key, value)
 
 
-@app.get("/cards")
-def get_all_cards(user_id: int = -1, limit: int = 50):
-    if user_id == -1:
-        raise HTTPException(status_code=404, detail="Item not found")
-
-    cards = Word.get_cards_to_learn(user_id=user_id, size=limit)
-    return {"cards": cards}
+def exists(word, definition):
+    key = json.dumps({"word": word, "definition": definition})
+    return redis_client.exists(key)
 
 
-@app.get("/word/{word_id}/definition")
-def get_definition(word_id: int):
-    return {"definition": Definition.get_definition(word_id)}
+def get_value(word, definition):
+    key = json.dumps({"word": word, "definition": definition})
+    return redis_client.get(key)
 
 
-@app.post("/review")
-def add_review(user_id: int, word_id: int, review_quality: int, review_date: str):
-    user_review = UserReview(user_id, word_id, review_date)
-    user_review.update_review(review_quality)
-    return {"review_id": user_review.review_id}
+def request(action, **params):
+    return {"action": action, "params": params, "version": 6}
+
+
+def invoke(action, **params):
+    requestJson = json.dumps(request(action, **params)).encode("utf-8")
+    response = json.load(
+        urllib.request.urlopen(
+            urllib.request.Request("http://127.0.0.1:8765", requestJson)
+        )
+    )
+    if len(response) != 2:
+        raise Exception("response has an unexpected number of fields")
+    if "error" not in response:
+        raise Exception("response is missing required error field")
+    if "result" not in response:
+        raise Exception("response is missing required result field")
+    if response["error"] is not None:
+        raise Exception(response["error"])
+    return response["result"]
+
+
+def add_definitions_to_anki(definitions, deck_name):
+    invoke("createDeck", deck=deck_name)
+    notes = []
+
+    for word, definitions_list in definitions.items():
+        for definition in definitions_list:
+            if exists(word, definition):
+                continue
+
+            add_entry(word, definition, 1)
+            notes.append(
+                {
+                    "deckName": deck_name,
+                    "modelName": "Basic",
+                    "fields": {
+                        "Front": word,
+                        "Back": definition,
+                    },
+                    "options": {
+                        "allowDuplicate": True,
+                        "duplicateScope": "deck",
+                        "duplicateScopeOptions": {
+                            "deckName": deck_name,
+                            "checkChildren": False,
+                            "checkAllModels": False,
+                        },
+                    },
+                }
+            )
+
+    invoke(
+        "addNotes",
+        notes=notes,
+    )
+
+    logging.info("Successfully added notes to Anki")
+    logging.info(len(notes))
+
+
+@app.post("/text")
+async def upload_text(
+    text: str, language: str = "ro", deck_name: str = "Romanian_slovoed"
+):
+    definitions = save_words_from_text(CUBE, WORDNET, text)
+    add_definitions_to_anki(definitions, deck_name)
+
+    return {"text": text, "definitions_length": len(definitions)}
 
 
 @app.post("/file")
-async def upload_file(file: UploadFile):
+async def upload_file(
+    file: UploadFile, language: str = "ro", deck_name: str = "Romanian_slovoed"
+):
+    allowed_extensions = {"txt", "pdf", "epub", "fb2"}
+
+    filename = file.filename
+    file_extension = filename.rsplit(".", 1)[1].lower()
+
+    if file_extension not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="File format not supported")
+
     contents = await file.read()
     text = contents.decode("utf-8")
-    definitions = Word.save_words_from_text(CUBE, WORDNET, text)
+    definitions = save_words_from_text(CUBE, WORDNET, text)
 
-    return {"filename": file.filename, "definitions": definitions}
+    add_definitions_to_anki(definitions, deck_name)
+
+    return {"filename": file.filename, "definitions_length": len(definitions)}
