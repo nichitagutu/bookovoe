@@ -1,7 +1,7 @@
 from os import path
 from typing import List
 
-from wordnet_interface import fetch_synset_ids_for_lemmas, get_synset_key_value_definitions,
+from wordnet_interface import fetch_synset_ids_for_lemmas, get_synset_key_value_definitions
 from text_processing import process_long_text, process_short_text, prepare_text
 
 
